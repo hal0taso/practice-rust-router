@@ -1,0 +1,59 @@
+services:
+  alice:
+    build:
+      context: ./alice
+    container_name: alice-container
+    hostname: Alice
+    tty: true
+    stdin_open: true
+    privileged: true
+    volumes:
+      - ./alice/app:/app
+    networks:
+      net1:
+        ipv4_address: 10.0.0.10
+    entrypoint: /app/entrypoint.sh
+
+  bob:
+    build:
+      context: ./bob
+    container_name: bob-container
+    hostname: Bob
+    tty: true
+    stdin_open: true
+    privileged: true
+    volumes:
+      - ./bob/app:/app
+    networks:
+      net2:
+        ipv4_address: 10.0.1.10
+    entrypoint: /app/entrypoint.sh
+
+  router:
+    build:
+      context: ./router
+    container_name: router-container
+    hostname: Router
+    tty: true
+    stdin_open: true
+    privileged: true
+    volumes:
+      - ./router/app:/app
+    networks:
+      net1:
+        ipv4_address: 10.0.0.250
+      net2:
+        ipv4_address: 10.0.1.250
+    sysctls:
+      - net.ipv4.ip_forward=1
+    entrypoint: /app/entrypoint.sh
+
+networks:
+  net1:
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+  net2:
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
