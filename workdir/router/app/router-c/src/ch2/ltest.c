@@ -1,7 +1,7 @@
 /**
  * @file ltest.c
- * @brief Chapter 2-1 Sample program of Data Link Layer
- * @details
+ * @brief Chapter 2-1 データリンク層を扱うサンプルプログラム
+ * @details RAWソケットを使ってデータリンク層のパケットを受信, 標準出力にEthernetヘッダを表示する
  */
 #include <stdio.h>
 #include <string.h>

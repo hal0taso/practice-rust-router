@@ -1,6 +1,6 @@
 #!/bin/bash
 # cd /app/router-rs
 # cargo run
-cd /app/router-c/src
+cd /app/router-c/src/ch3
 make
-./main
+./pcap eth0

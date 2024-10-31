@@ -36,7 +36,7 @@ services:
     hostname: Router
     tty: true
     stdin_open: true
-    privileged: true
+    privileged: true # Required to handle link layer socket
     volumes:
       - ./router/app:/app
     networks:
