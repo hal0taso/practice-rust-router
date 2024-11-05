@@ -39,7 +39,7 @@ services:
     hostname: Router
     tty: true
     stdin_open: true
-    privileged: true # Required to handle link layer socket
+    privileged: true # リンクレイヤ層のパケットを処理するために必要
     volumes:
       - ./router/app:/app
     networks:

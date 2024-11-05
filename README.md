@@ -1,39 +1,35 @@
-# practice-rust-router
+# Flow of packets seen in the self-made router
+小俣光之, "ルーター自作でわかるパケットの流れ～ソースコードで体感するネットワークのしくみ", 技術評論社, 2011 の勉強用リポジトリ
 
 ## How to start
-1. Install Docker Desktop
+本書はNICが2つあるLinux環境上で動作する想定のため, Docker上で環境を用意する.
 
-2. Build containers
+1. Docker Desktopのインストール
+* https://docs.docker.com/get-started/get-docker/
+
+
+2. コンテナのビルド
+
 ```bash
 $ cd workdir docker compose build
 ```
 
-3. Run containers
+3. コンテナの実行
+
 ```bash
 docker compose up
 ```
 
-4. See packets
-
-### Requirements
-* Docker Desktop
-    * Docker Engine
-    * Docker CLI client
-    * Docker Compose
+`workdir/router/app/entrypoint.sh` を書き換えることで、各章で動かしたいプログラムをビルド/実行できる.
 
 
 ### Documents
-Document generation by Doxigen is available. Run 
+関数の依存など全体像を把握するため、Doxygenのドキュメント生成に対応したコメントを追加している. 
+Doxifileはリポジトリに同梱しているので, `workdir/router/app` 上で実行すればdoxygenを実行すると, `workdir/router/app/docs/html` 配下にドキュメントが生成される.
 ```bash
 $ cd workdir/router/app/
 $ doxygen
 ```
-
-## What is this
-This is a repository for practicing 
-* Network programming
-
-Source codes and other cofig files are from the book and url in References.
 
 ## References
 * 小俣光之, "ルーター自作でわかるパケットの流れ～ソースコードで体感するネットワークのしくみ", 技術評論社, 2011
