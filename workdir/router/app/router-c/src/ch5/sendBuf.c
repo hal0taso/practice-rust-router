@@ -135,11 +135,12 @@ int GetSendData(IP2MAC *ip2mac, int *size, u_char **data)
 
     pthread_mutex_unlock(&sd->mutex);
 
-    *data = d->data;
     *size = d->size;
+    *data = d->data;
+
     free(d);
 
-    DebugPrintf("GetSendData:%s:%dbytes(Total=%lu:%lubytes)\n", in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), *size, sd->dno, sd->inBucketSize);
+    DebugPrintf("GetSendData:[%d] %s:%dbytes\n", ip2mac->deviceNo, in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), *size);
 
     return 0;
 }

@@ -118,7 +118,8 @@ int InitRawSocket(char *device, int promiscFlag, int ipOnly)
     }
     // プロミスキャスモードの設定
     if (promiscFlag)
-    { // デバイスのフラグを取得
+    {
+        // デバイスのフラグを取得
         if (ioctl(soc, SIOCGIFFLAGS, &ifreq) < 0)
         {
             DebugPerror("ioctl:SIOCGIFFLAGS");
@@ -486,6 +487,9 @@ int SendArpRequestB(int soc, in_addr_t target_ip, u_char target_mac[6], in_addr_
     for (i = 0; i < 6; i++)
     {
         arp.arp.arp_sha[i] = my_mac[i];
+    }
+    for (i = 0; i < 6; i++)
+    {
         arp.arp.arp_tha[i] = 0;
     }
     lc.l = my_ip;

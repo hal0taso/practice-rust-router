@@ -22,8 +22,10 @@
 
 extern int DebugPrintf(char *fmt, ...);
 
-#define IP2MAC_TIMEOUT_SEC 60   // ARPキャッシュのタイムアウト
-#define IP2MAC_NG_TIMEOUT_SEC 1 // ARP NGのタイムアウト
+// ARPキャッシュのタイムアウト
+#define IP2MAC_TIMEOUT_SEC 60
+// ARP NGのタイムアウト
+#define IP2MAC_NG_TIMEOUT_SEC 1
 
 /**
  * @brief ARPテーブルのエントリ
@@ -84,7 +86,7 @@ IP2MAC *Ip2MacSearch(int deviceNo, in_addr_t addr, u_char *hwaddr)
                 { // 送信待ちデータがある場合
                     AppendSendReqData(deviceNo, i);
                 }
-                // DebugPrintf("Ip2Mac EXIST [%d] %s = %d\n", deviceNo, in_addr_t2st(addr, buf, sizeof(buf)), i);
+                DebugPrintf("Ip2Mac EXIST [%d] %s = %d\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)), i);
                 return ip2mac;
             }
             else
@@ -93,7 +95,7 @@ IP2MAC *Ip2MacSearch(int deviceNo, in_addr_t addr, u_char *hwaddr)
                 { // タイムアウトした場合, エントリを解放
                     FreeSendData(ip2mac);
                     ip2mac->flag = FLAG_FREE;
-                    // DebugPrintf("Ip2Mac FREE [%d] %s = %d\n", deviceNo, in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), i);
+                    DebugPrintf("Ip2Mac FREE [%d] %s = %d\n", deviceNo, in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), i);
                     if (freeNo == -1)
                     {
                         freeNo = i;
@@ -101,7 +103,7 @@ IP2MAC *Ip2MacSearch(int deviceNo, in_addr_t addr, u_char *hwaddr)
                 }
                 else
                 { // タイムアウトしていない場合
-                    // DebugPrintf("Ip2Mac EXIST [%d] %s = %d\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)), i);
+                    DebugPrintf("Ip2Mac EXIST [%d] %s = %d\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)), i);
                     return ip2mac;
                 }
             }
@@ -112,7 +114,7 @@ IP2MAC *Ip2MacSearch(int deviceNo, in_addr_t addr, u_char *hwaddr)
             { // タイムアウトした場合, エントリを解放
                 FreeSendData(ip2mac);
                 ip2mac->flag = FLAG_FREE;
-                // DebugPrintf("Ip2Mac FREE [%d] %s = %d\n", deviceNo, in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), i);
+                DebugPrintf("Ip2Mac FREE [%d] %s = %d\n", deviceNo, in_addr_t2str(ip2mac->addr, buf, sizeof(buf)), i);
                 if (freeNo == -1)
                 {
                     freeNo = i;
@@ -128,12 +130,12 @@ IP2MAC *Ip2MacSearch(int deviceNo, in_addr_t addr, u_char *hwaddr)
             if (Ip2Macs[deviceNo].size == 0)
             {
                 Ip2Macs[deviceNo].size = 1024;
-                Ip2Macs[deviceNo].data = (IP2MAC *)malloc(sizeof(IP2MAC) * Ip2Macs[deviceNo].size);
+                Ip2Macs[deviceNo].data = (IP2MAC *)malloc(Ip2Macs[deviceNo].size * sizeof(IP2MAC));
             }
             else
             {
-                Ip2Macs[deviceNo].size *= 1024;
-                Ip2Macs[deviceNo].data = (IP2MAC *)realloc(Ip2Macs[deviceNo].data, sizeof(IP2MAC) * Ip2Macs[deviceNo].size);
+                Ip2Macs[deviceNo].size += 1024;
+                Ip2Macs[deviceNo].data = (IP2MAC *)realloc(Ip2Macs[deviceNo].data, Ip2Macs[deviceNo].size * sizeof(IP2MAC));
             }
         }
         Ip2Macs[deviceNo].no++;
@@ -183,13 +185,13 @@ IP2MAC *Ip2Mac(int deviceNo, in_addr_t addr, u_char *hwaddr)
     ip2mac = Ip2MacSearch(deviceNo, addr, hwaddr);
     if (ip2mac->flag == FLAG_OK)
     { // ARPテーブルにエントリがある場合, エントリを返す
-        DebugPrintf("Ip2Mac(%s): OK\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)));
+        DebugPrintf("Ip2Mac(%s): OK\n", in_addr_t2str(addr, buf, sizeof(buf)));
         return ip2mac;
     }
     else
     { // ARPテーブルにエントリがない場合, ARPリクエストを送信
-        DebugPrintf("Ip2Mac(%s): NG\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)));
-        DebugPrintf("Ip2Mac(%s): Send Arp Request\n", deviceNo, in_addr_t2str(addr, buf, sizeof(buf)));
+        DebugPrintf("Ip2Mac(%s): NG\n", in_addr_t2str(addr, buf, sizeof(buf)));
+        DebugPrintf("Ip2Mac(%s): Send Arp Request\n", in_addr_t2str(addr, buf, sizeof(buf)));
         SendArpRequestB(Device[deviceNo].soc, addr, bcast, Device[deviceNo].addr.s_addr, Device[deviceNo].hwaddr);
         return ip2mac;
     }
@@ -239,7 +241,7 @@ int BufferSendOne(int deviceNo, IP2MAC *ip2mac)
         memcpy(eh.ether_shost, Device[deviceNo].hwaddr, 6);
         memcpy(data, &eh, sizeof(struct ether_header));
 
-        DebugPrintf("ophdr.ttl %d->%d\n", iphdr.ttl, iphdr.ttl - 1);
+        DebugPrintf("iphdr.ttl %d->%d\n", iphdr.ttl, iphdr.ttl - 1);
         iphdr.ttl--;
 
         iphdr.check = 0;
@@ -265,8 +267,8 @@ int BufferSendOne(int deviceNo, IP2MAC *ip2mac)
  */
 typedef struct _send_req_data_
 {
-    struct _send_req_data *next;
-    struct _send_req_data *before;
+    struct _send_req_data_ *next;
+    struct _send_req_data_ *before;
     int deviceNo;
     int ip2macNo;
 } SEND_REQ_DATA;

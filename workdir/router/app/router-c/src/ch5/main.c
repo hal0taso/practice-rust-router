@@ -35,7 +35,7 @@ typedef struct
 } PARAM;
 
 // 簡単のためデバイスはハードコード
-PARAM Param = {"eth0", "eth1", 1, "192.168.0.254"};
+PARAM Param = {"eth0", "eth1", 1, "10.0.1.250"};
 
 struct in_addr NextRouter; // 上位ルータのIPアドレス
 DEVICE Device[2];          // ネットワークインターフェースのソケットディスクリプタを保持する構造体
@@ -54,7 +54,7 @@ int DebugPrintf(char *fmt, ...)
     {
         va_list args;
         va_start(args, fmt);
-        vfprintf(stdout, fmt, args);
+        vfprintf(stderr, fmt, args);
         va_end(args);
     }
     return 0;
@@ -138,7 +138,7 @@ int SendIcmpTimeExceeded(int deviceNo, struct ether_header *eh, struct iphdr *ip
     ptr += 64;
     len = ptr - buf;
 
-    DebugPrintf("write:SendIcmpTimeExceeded:[%d] $dbytes\n", deviceNo, len);
+    DebugPrintf("write:SendIcmpTimeExceeded:[%d] %dbytes\n", deviceNo, len);
     write(Device[deviceNo].soc, buf, len);
 
     return 0;
@@ -182,7 +182,7 @@ int AnalyzePacket(int deviceNo, u_char *data, int size)
     if (ntohs(eh->ether_type) == ETHERTYPE_ARP)
     { // ARPパケットの場合
         struct ether_arp *arp;
-
+        DebugPrintf("[%d]:ARP packet\n", deviceNo);
         if (lest < sizeof(struct ether_arp))
         { // パケットサイズがARPヘッダより小さい場合
             DebugPrintf("[%d]:lest(%d) < sizeof(struct ether_arp)\n", deviceNo, lest);
@@ -195,17 +195,18 @@ int AnalyzePacket(int deviceNo, u_char *data, int size)
 
         if (arp->arp_op == htons(ARPOP_REQUEST))
         { // ARPリクエストの場合
-            DebugPrintf("[%d]recv:ARP Request:%dbytes\n", deviceNo, size);
+            DebugPrintf("[%d]recv:ARP REQUEST:%dbytes\n", deviceNo, size);
             Ip2Mac(deviceNo, *(in_addr_t *)arp->arp_spa, arp->arp_sha);
         }
         if (arp->arp_op == htons(ARPOP_REPLY))
         { // ARPリプライの場合
-            DebugPrintf("[%d]recv:ARP Reply:%dbytes\n", deviceNo, size);
+            DebugPrintf("[%d]recv:ARP REPLY:%dbytes\n", deviceNo, size);
             Ip2Mac(deviceNo, *(in_addr_t *)arp->arp_spa, arp->arp_sha);
         }
     }
     else if (ntohs(eh->ether_type) == ETHERTYPE_IP)
     { // IPパケットの場合
+        DebugPrintf("[%d]:IP packet\n", deviceNo);
         struct iphdr *iphdr;
         u_char option[1500];
         int optionLen;
@@ -245,13 +246,13 @@ int AnalyzePacket(int deviceNo, u_char *data, int size)
             SendIcmpTimeExceeded(deviceNo, eh, iphdr, data, size);
             return -1;
         }
-
+        // 送信先デバイス番号の設定(0->1, 1->0)
         tno = (!deviceNo);
         if ((iphdr->daddr & Device[tno].netmask.s_addr) == Device[tno].subnet.s_addr)
         { // 宛先IPアドレスが自ネットワーク内の場合
             IP2MAC *ip2mac;
 
-            DebugPrintf("[%d]:%s to Target Segment\n", deviceNo, in_addr_t2str(iphdr->daddr, buf, sizeof(buf)));
+            DebugPrintf("[%d]:%s to TargetSegment\n", deviceNo, in_addr_t2str(iphdr->daddr, buf, sizeof(buf)));
 
             if (iphdr->daddr == Device[tno].addr.s_addr)
             {
@@ -262,7 +263,7 @@ int AnalyzePacket(int deviceNo, u_char *data, int size)
             ip2mac = Ip2Mac(tno, iphdr->daddr, NULL);
             if (ip2mac->flag == FLAG_NG || ip2mac->sd.dno != 0)
             { // ARPテーブルにエントリがない場合, AppendSendData() で送信待ちバッファに格納
-                DebugPrintf(("[%d]:Ip2Mac error or sending\n", deviceNo));
+                DebugPrintf("[%d]:Ip2Mac error or sending\n", deviceNo);
                 AppendSendData(ip2mac, 1, iphdr->daddr, data, size);
                 return -1;
             }
@@ -292,13 +293,13 @@ int AnalyzePacket(int deviceNo, u_char *data, int size)
         }
         // パケットの送出
         memcpy(eh->ether_dhost, hwaddr, 6);
-        memcpy(eh->ether_shost, Device[deviceNo].hwaddr, 6);
+        memcpy(eh->ether_shost, Device[tno].hwaddr, 6);
 
         iphdr->ttl--;
         iphdr->check = 0;
         iphdr->check = checksum2((u_char *)iphdr, sizeof(struct iphdr), option, optionLen);
 
-        write(Device[deviceNo].soc, data, size);
+        write(Device[tno].soc, data, size);
     }
     else
     { // その他のパケットの場合
@@ -328,7 +329,7 @@ int Router()
         case -1:
             if (errno != EINTR)
             {
-                perror("poll");
+                DebugPerror("poll");
             }
             break;
         case 0:
@@ -340,7 +341,7 @@ int Router()
                 {
                     if ((size = read(Device[i].soc, buf, sizeof(buf))) <= 0)
                     {
-                        perror("read");
+                        DebugPerror("read");
                     }
                     else
                     {

@@ -23,10 +23,10 @@ typedef struct
  * @brief 送信待ちデータの構造体. 双方向リストで管理する
  *
  */
-typedef struct _data_buf
+typedef struct _data_buf_
 {
-    struct _data_buf *next;
-    struct _data_buf *before;
+    struct _data_buf_ *next;
+    struct _data_buf_ *before;
     time_t t;
     int size;
     unsigned char *data;

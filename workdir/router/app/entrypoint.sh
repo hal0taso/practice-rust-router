@@ -22,4 +22,9 @@ cd /app/router-c/src/ch5
 make
 ./router
 
+cd /app/Router
+/sbin/sysctl net.ipv4.ip_forward # make sure that the value is 1
+make
+./router
+
 bash -c "/bin/bash"
