@@ -1,6 +1,4 @@
 FROM ubuntu:22.04
-# FROM rust:1.72
-# FROM gcc:latest
 
 WORKDIR /app
 ENV APP_HOME=/app

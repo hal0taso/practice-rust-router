@@ -1,5 +1,6 @@
 services:
   alice:
+    # client
     build:
       context: ./alice
     container_name: alice-container
@@ -15,6 +16,7 @@ services:
     entrypoint: /app/entrypoint.sh
 
   bob:
+    # server
     build:
       context: ./bob
     container_name: bob-container
@@ -29,22 +31,8 @@ services:
         ipv4_address: 10.0.1.10
     entrypoint: /app/entrypoint.sh
 
-  # charlie:
-  #   build:
-  #     context: ./charlie
-  #   container_name: charlie-container
-  #   hostname: Charlie
-  #   tty: true
-  #   stdin_open: true
-  #   privileged: true
-  #   volumes:
-  #     - ./charlie/app:/app
-  #   networks:
-  #     net1:
-  #       ipv4_address: 10.0.0.11
-  #   entrypoint: /app/entrypoint.sh
-
   router:
+    # router
     build:
       context: ./router
     container_name: router-container
